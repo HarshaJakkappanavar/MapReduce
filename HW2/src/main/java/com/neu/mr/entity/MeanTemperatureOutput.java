@@ -52,8 +52,8 @@ public class MeanTemperatureOutput implements Writable {
 	 */
 	@Override
 	public void readFields(DataInput in) throws IOException {
-		// TODO Auto-generated method stub
-
+		this.tMinMeanAccumulator.readFields(in);
+		this.tMaxMeanAccumulator.readFields(in);
 	}
 
 	/* (non-Javadoc)
@@ -61,8 +61,9 @@ public class MeanTemperatureOutput implements Writable {
 	 */
 	@Override
 	public void write(DataOutput out) throws IOException {
-		// TODO Auto-generated method stub
-
+		
+		this.tMinMeanAccumulator.write(out);
+		this.tMaxMeanAccumulator.write(out);
 	}
 
 }

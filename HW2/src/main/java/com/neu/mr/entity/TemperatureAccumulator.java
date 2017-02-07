@@ -26,6 +26,10 @@ public class TemperatureAccumulator implements Writable {
 //	Holds the temperature value
 	private IntWritable temperature;
 	
+	public TemperatureAccumulator(){
+		this.temperatureType = new IntWritable(0);
+		this.temperature = new IntWritable(0);
+	}
 	public TemperatureAccumulator(String temperatureType, int temperature) {
 		this.temperatureType = new IntWritable(temperatureType.equalsIgnoreCase(
 												AppConstants.TMAX_TEXT)?
@@ -67,8 +71,8 @@ public class TemperatureAccumulator implements Writable {
 	 */
 	@Override
 	public void readFields(DataInput in) throws IOException {
-		this.temperatureType.set(in.readInt());
-		this.temperature.set(in.readInt());
+		this.temperatureType.readFields(in);
+		this.temperature.readFields(in);
 
 	}
 
@@ -77,8 +81,8 @@ public class TemperatureAccumulator implements Writable {
 	 */
 	@Override
 	public void write(DataOutput out) throws IOException {
-		out.writeInt(temperatureType.get());
-		out.writeInt(temperature.get());
+		this.temperatureType.write(out);
+		this.temperature.write(out);
 	}
 
 }

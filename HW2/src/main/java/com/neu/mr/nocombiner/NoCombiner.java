@@ -7,7 +7,6 @@ import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -95,8 +94,7 @@ class NoCombinerMapper extends Mapper<LongWritable, Text, Text, TemperatureAccum
 	
 }
 
-class NoCombinerReducer 
-extends Reducer<Text, TemperatureAccumulator, Text, MeanTemperatureOutput> {
+class NoCombinerReducer extends Reducer<Text, TemperatureAccumulator, Text, MeanTemperatureOutput> {
 
 	/* (non-Javadoc)
 	 * @see org.apache.hadoop.mapreduce.Reducer#reduce(java.lang.Object, java.lang.Iterable, org.apache.hadoop.mapreduce.Reducer.Context)

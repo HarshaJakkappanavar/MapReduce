@@ -77,8 +77,8 @@ public class MeanTemperatureAccumulator implements Writable {
 	 */
 	@Override
 	public void readFields(DataInput in) throws IOException {
-		this.sumSoFar.set(in.readInt());
-		this.countSoFar.set(in.readInt());
+		this.sumSoFar.readFields(in);
+		this.countSoFar.readFields(in);
 
 	}
 
@@ -87,8 +87,8 @@ public class MeanTemperatureAccumulator implements Writable {
 	 */
 	@Override
 	public void write(DataOutput out) throws IOException {
-		out.writeInt(sumSoFar.get());
-		out.writeInt(countSoFar.get());
+		this.sumSoFar.write(out);
+		this.countSoFar.write(out);
 	}
 
 }
