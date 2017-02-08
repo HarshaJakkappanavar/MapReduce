@@ -1,13 +1,14 @@
 /**
  * 
  */
-package com.neu.mr.nocombiner;
+package com.neu.mr.secondarysort;
 
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -19,12 +20,16 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import com.neu.mr.constants.AppConstants;
 import com.neu.mr.entity.MeanTemperatureOutput;
 import com.neu.mr.entity.TemperatureAccumulator;
+import com.neu.mr.secondarysort.entity.GroupComparator;
+import com.neu.mr.secondarysort.entity.HashPartitioner;
+import com.neu.mr.secondarysort.entity.KeyComparator;
+import com.neu.mr.secondarysort.entity.StationYearKey;
 
 /**
  * @author harsha
  *
  */
-public class NoCombiner {
+public class SecondarySort {
 
 	/**
 	 * @param args
@@ -41,13 +46,19 @@ public class NoCombiner {
 		}
 		
 		Job job = new Job(configuration, "NoCombiner");
-		job.setJarByClass(NoCombiner.class);
-		job.setMapperClass(NoCombinerMapper.class);
-		job.setReducerClass(NoCombinerReducer.class);
-		job.setMapOutputKeyClass(Text.class);
+		job.setJarByClass(SecondarySort.class);
+		
+		job.setMapperClass(SecondarySortMapper.class);
+		job.setMapOutputKeyClass(StationYearKey.class);
 		job.setMapOutputValueClass(TemperatureAccumulator.class);
-		job.setOutputKeyClass(Text.class);
-		job.setOutputValueClass(MeanTemperatureOutput.class);
+
+		job.setReducerClass(SecondarySortReducer.class);
+		job.setOutputKeyClass(NullWritable.class);
+		job.setOutputValueClass(Text.class);
+		
+		job.setPartitionerClass(HashPartitioner.class);
+		job.setSortComparatorClass(KeyComparator.class);
+		job.setGroupingComparatorClass(GroupComparator.class);
 		
 		for(int i = 0; i < cmdLineArgs.length - 1; i++){
 			FileInputFormat.addInputPath(job, new Path(cmdLineArgs[i]));
@@ -60,14 +71,14 @@ public class NoCombiner {
 
 }
 
-class NoCombinerMapper extends Mapper<LongWritable, Text, Text, TemperatureAccumulator> {
+class SecondarySortMapper extends Mapper<LongWritable, Text, StationYearKey, TemperatureAccumulator> {
 
 	/* (non-Javadoc)
 	 * @see org.apache.hadoop.mapreduce.Mapper#map(java.lang.Object, java.lang.Object, org.apache.hadoop.mapreduce.Mapper.Context)
 	 */
 	@Override
 	protected void map(LongWritable key, Text value,
-			Mapper<LongWritable, Text, Text, TemperatureAccumulator>.Context context)
+			Mapper<LongWritable, Text, StationYearKey, TemperatureAccumulator>.Context context)
 			throws IOException, InterruptedException {
 		
 		String line = value.toString();
@@ -78,11 +89,15 @@ class NoCombinerMapper extends Mapper<LongWritable, Text, Text, TemperatureAccum
 		if(tempTypeFromLine.equalsIgnoreCase(AppConstants.TMAX_TEXT) 
 				|| tempTypeFromLine.equalsIgnoreCase(AppConstants.TMIN_TEXT)){
 			
-			int temperature = Integer.parseInt(lineArray[3]);
 			String stationId = lineArray[0];
+			String yearInText = lineArray[1];
+			int year = Integer.parseInt(yearInText.substring(0, 4));
+			int temperature = Integer.parseInt(lineArray[3]);
 			
+			StationYearKey stationYearKey = new StationYearKey(stationId, year);
 			TemperatureAccumulator temperatureAccumulator = new TemperatureAccumulator(tempTypeFromLine, temperature);
-			context.write(new Text(stationId), temperatureAccumulator);
+
+			context.write(stationYearKey, temperatureAccumulator);
 		}
 		
 		
@@ -91,14 +106,16 @@ class NoCombinerMapper extends Mapper<LongWritable, Text, Text, TemperatureAccum
 	
 }
 
-class NoCombinerReducer extends Reducer<Text, TemperatureAccumulator, Text, MeanTemperatureOutput> {
+class SecondarySortReducer extends Reducer<StationYearKey, TemperatureAccumulator, NullWritable, Text> {
+	
+	NullWritable nw =  NullWritable.get();
 
 	/* (non-Javadoc)
 	 * @see org.apache.hadoop.mapreduce.Reducer#reduce(java.lang.Object, java.lang.Iterable, org.apache.hadoop.mapreduce.Reducer.Context)
 	 */
 	@Override
-	protected void reduce(Text key, Iterable<TemperatureAccumulator> temperatureAccumulators,
-			Reducer<Text, TemperatureAccumulator, Text, MeanTemperatureOutput>.Context context)
+	protected void reduce(StationYearKey key, Iterable<TemperatureAccumulator> temperatureAccumulators,
+			Reducer<StationYearKey, TemperatureAccumulator, NullWritable, Text>.Context context)
 			throws IOException, InterruptedException {
 
 		MeanTemperatureOutput meanTemperatureOutput = new MeanTemperatureOutput();
@@ -110,8 +127,8 @@ class NoCombinerReducer extends Reducer<Text, TemperatureAccumulator, Text, Mean
 				meanTemperatureOutput.updateTMaxMeanAccumulator(temperatureAccumulator.getTemperature(), 1);
 			}
 		}
-		
-		context.write(key, meanTemperatureOutput);
+//		TODO write a string builder and append the required text.
+		context.write(nw, new Text("Dummy"));
 	}
 	
 	

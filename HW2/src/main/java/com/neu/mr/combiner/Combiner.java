@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.neu.mr.nocombiner;
+package com.neu.mr.combiner;
 
 import java.io.IOException;
 
@@ -24,7 +24,7 @@ import com.neu.mr.entity.TemperatureAccumulator;
  * @author harsha
  *
  */
-public class NoCombiner {
+public class Combiner {
 
 	/**
 	 * @param args
@@ -40,10 +40,11 @@ public class NoCombiner {
 			System.exit(2);
 		}
 		
-		Job job = new Job(configuration, "NoCombiner");
-		job.setJarByClass(NoCombiner.class);
-		job.setMapperClass(NoCombinerMapper.class);
-		job.setReducerClass(NoCombinerReducer.class);
+		Job job = new Job(configuration, "Combiner");
+		job.setJarByClass(Combiner.class);
+		job.setMapperClass(CombinerMapper.class);
+		job.setReducerClass(CombinerReducer.class);
+		job.setCombinerClass(CombinerClass.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(TemperatureAccumulator.class);
 		job.setOutputKeyClass(Text.class);
@@ -60,7 +61,7 @@ public class NoCombiner {
 
 }
 
-class NoCombinerMapper extends Mapper<LongWritable, Text, Text, TemperatureAccumulator> {
+class CombinerMapper extends Mapper<LongWritable, Text, Text, TemperatureAccumulator> {
 
 	/* (non-Javadoc)
 	 * @see org.apache.hadoop.mapreduce.Mapper#map(java.lang.Object, java.lang.Object, org.apache.hadoop.mapreduce.Mapper.Context)
@@ -91,7 +92,7 @@ class NoCombinerMapper extends Mapper<LongWritable, Text, Text, TemperatureAccum
 	
 }
 
-class NoCombinerReducer extends Reducer<Text, TemperatureAccumulator, Text, MeanTemperatureOutput> {
+class CombinerReducer extends Reducer<Text, TemperatureAccumulator, Text, MeanTemperatureOutput> {
 
 	/* (non-Javadoc)
 	 * @see org.apache.hadoop.mapreduce.Reducer#reduce(java.lang.Object, java.lang.Iterable, org.apache.hadoop.mapreduce.Reducer.Context)
@@ -105,19 +106,50 @@ class NoCombinerReducer extends Reducer<Text, TemperatureAccumulator, Text, Mean
 		
 		for(TemperatureAccumulator temperatureAccumulator : temperatureAccumulators){
 			if(temperatureAccumulator.getTemperatureType() == AppConstants.TMIN_VALUE){
-				meanTemperatureOutput.updateTMinMeanAccumulator(temperatureAccumulator.getTemperature(), 1);
+				meanTemperatureOutput.updateTMinMeanAccumulator(temperatureAccumulator.getTemperature(), temperatureAccumulator.getCountSoFar().get());
 			}else if(temperatureAccumulator.getTemperatureType() == AppConstants.TMAX_VALUE){
-				meanTemperatureOutput.updateTMaxMeanAccumulator(temperatureAccumulator.getTemperature(), 1);
+				meanTemperatureOutput.updateTMaxMeanAccumulator(temperatureAccumulator.getTemperature(), temperatureAccumulator.getCountSoFar().get());
 			}
 		}
 		
-		context.write(key, meanTemperatureOutput);
+		context.write(new Text(key.toString() + ","), meanTemperatureOutput);
 	}
 	
 	
 }
 
+class CombinerClass extends Reducer<Text, TemperatureAccumulator, Text, TemperatureAccumulator> {
 
+	/* (non-Javadoc)
+	 * @see org.apache.hadoop.mapreduce.Reducer#reduce(java.lang.Object, java.lang.Iterable, org.apache.hadoop.mapreduce.Reducer.Context)
+	 */
+	@Override
+	protected void reduce(Text key, Iterable<TemperatureAccumulator> temperatureAccumulators,
+			Reducer<Text, TemperatureAccumulator, Text, TemperatureAccumulator>.Context context)
+			throws IOException, InterruptedException {
+
+		TemperatureAccumulator tMinTemperatureAccumulator = new TemperatureAccumulator();
+		tMinTemperatureAccumulator.setTemperatureType(AppConstants.TMIN_VALUE);
+		TemperatureAccumulator tMaxTemperatureAccumulator = new TemperatureAccumulator();
+		tMaxTemperatureAccumulator.setTemperatureType(AppConstants.TMAX_VALUE);
+		
+		for(TemperatureAccumulator temperatureAccumulator : temperatureAccumulators){
+			if(temperatureAccumulator.getTemperatureType() == AppConstants.TMIN_VALUE){
+				tMinTemperatureAccumulator.updateTemperature(temperatureAccumulator.getTemperature());
+				tMinTemperatureAccumulator.updateCountSoFar(temperatureAccumulator.getCountSoFar());
+			}else if(temperatureAccumulator.getTemperatureType() == AppConstants.TMAX_VALUE){
+				tMaxTemperatureAccumulator.updateTemperature(temperatureAccumulator.getTemperature());
+				tMaxTemperatureAccumulator.updateCountSoFar(temperatureAccumulator.getCountSoFar());
+			}
+		}
+		
+		context.write(key, tMinTemperatureAccumulator);
+		context.write(key, tMaxTemperatureAccumulator);
+		
+	}
+	
+	
+}
 
 
 

@@ -7,6 +7,9 @@ jar.name=HW2-1.0.jar
 jar.path=target/${jar.name}
 #job.name=HW2
 job.name.nocombiner=com/neu/mr/nocombiner/NoCombiner
+job.name.combiner=com/neu/mr/combiner/Combiner
+job.name.inmappercomb=com/neu/mr/inmappercomb/InMapperComb
+job.name.secondarysort=com/neu/mr/secondarysort/SecondarySort
 local.input=input
 local.output=output
 # Pseudo-Cluster Execution
@@ -44,6 +47,24 @@ alone: jar clean-local-output
 # https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/SingleCluster.html#Standalone_Operation
 alone-no-combiner: jar clean-local-output
 	${hadoop.root}/bin/hadoop jar ${jar.path} ${job.name.nocombiner} ${local.input} ${local.output}
+
+# Runs standalone for Combiner
+# Make sure Hadoop  is set up (in /etc/hadoop files) for standalone operation (not pseudo-cluster).
+# https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/SingleCluster.html#Standalone_Operation
+alone-combiner: jar clean-local-output
+	${hadoop.root}/bin/hadoop jar ${jar.path} ${job.name.combiner} ${local.input} ${local.output}
+
+# Runs standalone for InMapperComb
+# Make sure Hadoop  is set up (in /etc/hadoop files) for standalone operation (not pseudo-cluster).
+# https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/SingleCluster.html#Standalone_Operation
+alone-in-mapper-combiner: jar clean-local-output
+	${hadoop.root}/bin/hadoop jar ${jar.path} ${job.name.inmappercomb} ${local.input} ${local.output}
+
+# Runs standalone for SecondarySort
+# Make sure Hadoop  is set up (in /etc/hadoop files) for standalone operation (not pseudo-cluster).
+# https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/SingleCluster.html#Standalone_Operation
+alone-secondarysort: jar clean-local-output
+	${hadoop.root}/bin/hadoop jar ${jar.path} ${job.name.secondarysort} ${local.input} ${local.output}
 
 # Start HDFS
 start-hdfs:
