@@ -9,7 +9,7 @@ import com.neu.mr.entity.TemperatureAccumulator;
 
 /**
  * @author harsha
- *
+ * Partiotions the intermediate keys by station id using hashcode.
  */
 public class HashPartitioner extends Partitioner<StationYearKey, TemperatureAccumulator> {
 

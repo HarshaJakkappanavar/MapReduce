@@ -8,13 +8,14 @@ import org.apache.hadoop.io.WritableComparator;
 
 /**
  * @author harsha
- *
+ * 
+ * Groups the intermediate keys by station id and ignores the year. This means that all the intermediate keys with the same station id are processed in the same reduce call.
  */
 public class GroupComparator extends WritableComparator {
 
 	
 	protected GroupComparator() {
-		super(StationYearKey.class);
+		super(StationYearKey.class, true);
 	}
 
 	/* (non-Javadoc)

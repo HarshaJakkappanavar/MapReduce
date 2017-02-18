@@ -61,6 +61,10 @@ public class Combiner {
 
 }
 
+/**
+ * @author harsha
+ *
+ */
 class CombinerMapper extends Mapper<LongWritable, Text, Text, TemperatureAccumulator> {
 
 	/* (non-Javadoc)
@@ -81,7 +85,7 @@ class CombinerMapper extends Mapper<LongWritable, Text, Text, TemperatureAccumul
 			
 			int temperature = Integer.parseInt(lineArray[3]);
 			String stationId = lineArray[0];
-			
+//			Populates the accumulator datastructure with temprature type and temperature
 			TemperatureAccumulator temperatureAccumulator = new TemperatureAccumulator(tempTypeFromLine, temperature);
 			context.write(new Text(stationId), temperatureAccumulator);
 		}
@@ -92,6 +96,10 @@ class CombinerMapper extends Mapper<LongWritable, Text, Text, TemperatureAccumul
 	
 }
 
+/**
+ * @author harsha
+ *
+ */
 class CombinerReducer extends Reducer<Text, TemperatureAccumulator, Text, MeanTemperatureOutput> {
 
 	/* (non-Javadoc)
@@ -106,18 +114,24 @@ class CombinerReducer extends Reducer<Text, TemperatureAccumulator, Text, MeanTe
 		
 		for(TemperatureAccumulator temperatureAccumulator : temperatureAccumulators){
 			if(temperatureAccumulator.getTemperatureType() == AppConstants.TMIN_VALUE){
+//				updates the count and temperature to the running TMIN temperature accumulator
 				meanTemperatureOutput.updateTMinMeanAccumulator(temperatureAccumulator.getTemperature(), temperatureAccumulator.getCountSoFar().get());
 			}else if(temperatureAccumulator.getTemperatureType() == AppConstants.TMAX_VALUE){
+//				updates the count and temperature to the running TMAX temperature accumulator
 				meanTemperatureOutput.updateTMaxMeanAccumulator(temperatureAccumulator.getTemperature(), temperatureAccumulator.getCountSoFar().get());
 			}
 		}
 		
-		context.write(new Text(key.toString() + ","), meanTemperatureOutput);
+		context.write(key, meanTemperatureOutput);
 	}
 	
 	
 }
 
+/**
+ * @author harsha
+ *
+ */
 class CombinerClass extends Reducer<Text, TemperatureAccumulator, Text, TemperatureAccumulator> {
 
 	/* (non-Javadoc)
@@ -127,7 +141,7 @@ class CombinerClass extends Reducer<Text, TemperatureAccumulator, Text, Temperat
 	protected void reduce(Text key, Iterable<TemperatureAccumulator> temperatureAccumulators,
 			Reducer<Text, TemperatureAccumulator, Text, TemperatureAccumulator>.Context context)
 			throws IOException, InterruptedException {
-
+//		We create two temperature accumulators one for TMIN and one for TMAX
 		TemperatureAccumulator tMinTemperatureAccumulator = new TemperatureAccumulator();
 		tMinTemperatureAccumulator.setTemperatureType(AppConstants.TMIN_VALUE);
 		TemperatureAccumulator tMaxTemperatureAccumulator = new TemperatureAccumulator();
@@ -135,9 +149,11 @@ class CombinerClass extends Reducer<Text, TemperatureAccumulator, Text, Temperat
 		
 		for(TemperatureAccumulator temperatureAccumulator : temperatureAccumulators){
 			if(temperatureAccumulator.getTemperatureType() == AppConstants.TMIN_VALUE){
+//				updates the count and temperature to the running TMIN temperature accumulator
 				tMinTemperatureAccumulator.updateTemperature(temperatureAccumulator.getTemperature());
 				tMinTemperatureAccumulator.updateCountSoFar(temperatureAccumulator.getCountSoFar());
 			}else if(temperatureAccumulator.getTemperatureType() == AppConstants.TMAX_VALUE){
+//				updates the count and temperature to the running TMAX temperature accumulator
 				tMaxTemperatureAccumulator.updateTemperature(temperatureAccumulator.getTemperature());
 				tMaxTemperatureAccumulator.updateCountSoFar(temperatureAccumulator.getCountSoFar());
 			}

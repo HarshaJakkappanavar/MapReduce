@@ -1,0 +1,59 @@
+2017-02-11T01:32:35.472Z INFO Ensure step 2 jar file s3://harshaj-bucket/HW2-1.0.jar
+2017-02-11T01:32:36.625Z INFO StepRunner: Created Runner for step 2
+INFO startExec 'hadoop jar /mnt/var/lib/hadoop/steps/s-326ON8U1BA3YE/HW2-1.0.jar com/neu/mr/combiner/Combiner s3://harshaj-bucket/input s3://harshaj-bucket/output/combiner/run1'
+INFO Environment:
+  PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/sbin:/opt/aws/bin
+  LESS_TERMCAP_md=[01;38;5;208m
+  LESS_TERMCAP_me=[0m
+  HISTCONTROL=ignoredups
+  LESS_TERMCAP_mb=[01;31m
+  AWS_AUTO_SCALING_HOME=/opt/aws/apitools/as
+  UPSTART_JOB=rc
+  LESS_TERMCAP_se=[0m
+  HISTSIZE=1000
+  HADOOP_ROOT_LOGGER=INFO,DRFA
+  JAVA_HOME=/etc/alternatives/jre
+  AWS_DEFAULT_REGION=us-east-1
+  AWS_ELB_HOME=/opt/aws/apitools/elb
+  LESS_TERMCAP_us=[04;38;5;111m
+  EC2_HOME=/opt/aws/apitools/ec2
+  TERM=linux
+  XFILESEARCHPATH=/usr/dt/app-defaults/%L/Dt
+  runlevel=3
+  LANG=en_US.UTF-8
+  AWS_CLOUDWATCH_HOME=/opt/aws/apitools/mon
+  MAIL=/var/spool/mail/hadoop
+  LESS_TERMCAP_ue=[0m
+  LOGNAME=hadoop
+  PWD=/
+  LANGSH_SOURCED=1
+  HADOOP_CLIENT_OPTS=-Djava.io.tmpdir=/mnt/var/lib/hadoop/steps/s-326ON8U1BA3YE/tmp
+  _=/etc/alternatives/jre/bin/java
+  CONSOLETYPE=serial
+  RUNLEVEL=3
+  LESSOPEN=||/usr/bin/lesspipe.sh %s
+  previous=N
+  UPSTART_EVENTS=runlevel
+  AWS_PATH=/opt/aws
+  USER=hadoop
+  UPSTART_INSTANCE=
+  PREVLEVEL=N
+  HADOOP_LOGFILE=syslog
+  HOSTNAME=ip-172-31-28-169
+  NLSPATH=/usr/dt/lib/nls/msg/%L/%N.cat
+  HADOOP_LOG_DIR=/mnt/var/log/hadoop/steps/s-326ON8U1BA3YE
+  EC2_AMITOOL_HOME=/opt/aws/amitools/ec2
+  SHLVL=5
+  HOME=/home/hadoop
+  HADOOP_IDENT_STRING=hadoop
+INFO redirectOutput to /mnt/var/log/hadoop/steps/s-326ON8U1BA3YE/stdout
+INFO redirectError to /mnt/var/log/hadoop/steps/s-326ON8U1BA3YE/stderr
+INFO Working dir /mnt/var/lib/hadoop/steps/s-326ON8U1BA3YE
+INFO ProcessRunner started child process 7938 :
+hadoop    7938  3289  0 01:32 ?        00:00:00 bash /usr/lib/hadoop/bin/hadoop jar /mnt/var/lib/hadoop/steps/s-326ON8U1BA3YE/HW2-1.0.jar com/neu/mr/combiner/Combiner s3://harshaj-bucket/input s3://harshaj-bucket/output/combiner/run1
+2017-02-11T01:32:40.656Z INFO HadoopJarStepRunner.Runner: startRun() called for s-326ON8U1BA3YE Child Pid: 7938
+INFO Synchronously wait child process to complete : hadoop jar /mnt/var/lib/hadoop/steps/s-326ON8U1...
+INFO waitProcessCompletion ended with exit code 0 : hadoop jar /mnt/var/lib/hadoop/steps/s-326ON8U1...
+INFO total process run time: 88 seconds
+2017-02-11T01:34:06.766Z INFO Step created jobs: job_1486776606416_0001
+2017-02-11T01:34:06.766Z INFO Step succeeded with exitCode 0 and took 88 seconds

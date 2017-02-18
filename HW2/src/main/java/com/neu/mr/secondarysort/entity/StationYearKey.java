@@ -14,7 +14,7 @@ import org.apache.hadoop.io.WritableComparable;
 
 /**
  * @author harsha
- *
+ * The datastructure holds station id and year as key
  */
 public class StationYearKey implements Writable, WritableComparable<StationYearKey> {
 	
@@ -23,8 +23,8 @@ public class StationYearKey implements Writable, WritableComparable<StationYearK
 	private IntWritable year;
 	
 	public StationYearKey() {
-		this.stationId = new Text();
-		this.year = new IntWritable();
+		this.stationId = new Text("");
+		this.year = new IntWritable(0);
 	}
 	
 	public StationYearKey(String stationId, int year){

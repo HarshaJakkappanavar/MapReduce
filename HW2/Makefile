@@ -23,9 +23,14 @@ aws.bucket.name=harshaj-bucket
 aws.subnet.id=subnet-a5b9c7fe
 aws.input=input
 aws.output=output
+aws.output.combiner.run1=output/combiner/run1
+aws.output.combiner.run2=output/combiner/run2
+aws.output.inmappercomb.run1=output/inmappercomb/run1
+aws.output.inmappercomb.run2=output/inmappercomb/run2
+aws.output.secondarysort=output/secondarysort
 aws.log.dir=log
-aws.num.nodes=2 
-aws.instance.type=m1.medium
+aws.num.nodes=5 
+aws.instance.type=m4.large
 # -----------------------------------------------------------
 
 # Compiles code and builds jar (with dependencies).
@@ -150,6 +155,96 @@ cloud: jar upload-app-aws delete-output-aws
 		--enable-debugging \
 		--auto-terminate
 
+# Main EMR launch for No combiner.
+cloud-no-combiner: jar upload-app-aws delete-output-aws
+	aws emr create-cluster \
+		--name "NoCombiner Cluster" \
+		--release-label ${aws.emr.release} \
+		--instance-groups '[{"InstanceCount":${aws.num.nodes},"InstanceGroupType":"CORE","InstanceType":"${aws.instance.type}"},{"InstanceCount":1,"InstanceGroupType":"MASTER","InstanceType":"${aws.instance.type}"}]' \
+	    --applications Name=Hadoop \
+	    --steps '[{"Args":["${job.name.nocombiner}","s3://${aws.bucket.name}/${aws.input}","s3://${aws.bucket.name}/${aws.output}"],"Type":"CUSTOM_JAR","Jar":"s3://${aws.bucket.name}/${jar.name}","ActionOnFailure":"TERMINATE_CLUSTER","Name":"Custom JAR"}]' \
+		--log-uri s3://${aws.bucket.name}/${aws.log.dir} \
+		--service-role EMR_DefaultRole \
+		--ec2-attributes InstanceProfile=EMR_EC2_DefaultRole,SubnetId=${aws.subnet.id} \
+		--region ${aws.region} \
+		--enable-debugging \
+		--auto-terminate
+
+# Main EMR launch for combiner run 1.
+cloud-combiner-run1: jar upload-app-aws
+	aws emr create-cluster \
+		--name "Combiner Cluster" \
+		--release-label ${aws.emr.release} \
+		--instance-groups '[{"InstanceCount":${aws.num.nodes},"InstanceGroupType":"CORE","InstanceType":"${aws.instance.type}"},{"InstanceCount":1,"InstanceGroupType":"MASTER","InstanceType":"${aws.instance.type}"}]' \
+	    --applications Name=Hadoop \
+	    --steps '[{"Args":["${job.name.combiner}","s3://${aws.bucket.name}/${aws.input}","s3://${aws.bucket.name}/${aws.output.combiner.run1}"],"Type":"CUSTOM_JAR","Jar":"s3://${aws.bucket.name}/${jar.name}","ActionOnFailure":"TERMINATE_CLUSTER","Name":"Custom JAR"}]' \
+		--log-uri s3://${aws.bucket.name}/${aws.log.dir} \
+		--service-role EMR_DefaultRole \
+		--ec2-attributes InstanceProfile=EMR_EC2_DefaultRole,SubnetId=${aws.subnet.id} \
+		--region ${aws.region} \
+		--enable-debugging \
+		--auto-terminate
+
+# Main EMR launch for combiner run 2.
+cloud-combiner-run2: jar upload-app-aws
+	aws emr create-cluster \
+		--name "Combiner Cluster" \
+		--release-label ${aws.emr.release} \
+		--instance-groups '[{"InstanceCount":${aws.num.nodes},"InstanceGroupType":"CORE","InstanceType":"${aws.instance.type}"},{"InstanceCount":1,"InstanceGroupType":"MASTER","InstanceType":"${aws.instance.type}"}]' \
+	    --applications Name=Hadoop \
+	    --steps '[{"Args":["${job.name.combiner}","s3://${aws.bucket.name}/${aws.input}","s3://${aws.bucket.name}/${aws.output.combiner.run2}"],"Type":"CUSTOM_JAR","Jar":"s3://${aws.bucket.name}/${jar.name}","ActionOnFailure":"TERMINATE_CLUSTER","Name":"Custom JAR"}]' \
+		--log-uri s3://${aws.bucket.name}/${aws.log.dir} \
+		--service-role EMR_DefaultRole \
+		--ec2-attributes InstanceProfile=EMR_EC2_DefaultRole,SubnetId=${aws.subnet.id} \
+		--region ${aws.region} \
+		--enable-debugging \
+		--auto-terminate
+
+# Main EMR launch for inmapper combiner run 1.
+cloud-in-mapper-combiner-run1: jar upload-app-aws
+	aws emr create-cluster \
+		--name "InMapperCombiner Cluster" \
+		--release-label ${aws.emr.release} \
+		--instance-groups '[{"InstanceCount":${aws.num.nodes},"InstanceGroupType":"CORE","InstanceType":"${aws.instance.type}"},{"InstanceCount":1,"InstanceGroupType":"MASTER","InstanceType":"${aws.instance.type}"}]' \
+	    --applications Name=Hadoop \
+	    --steps '[{"Args":["${job.name.inmappercomb}","s3://${aws.bucket.name}/${aws.input}","s3://${aws.bucket.name}/${aws.output.inmappercomb.run1}"],"Type":"CUSTOM_JAR","Jar":"s3://${aws.bucket.name}/${jar.name}","ActionOnFailure":"TERMINATE_CLUSTER","Name":"Custom JAR"}]' \
+		--log-uri s3://${aws.bucket.name}/${aws.log.dir} \
+		--service-role EMR_DefaultRole \
+		--ec2-attributes InstanceProfile=EMR_EC2_DefaultRole,SubnetId=${aws.subnet.id} \
+		--region ${aws.region} \
+		--enable-debugging \
+		--auto-terminate
+
+# Main EMR launch for inmapper combiner run 2.
+cloud-in-mapper-combiner-run2: jar upload-app-aws
+	aws emr create-cluster \
+		--name "InMapperCombiner Cluster" \
+		--release-label ${aws.emr.release} \
+		--instance-groups '[{"InstanceCount":${aws.num.nodes},"InstanceGroupType":"CORE","InstanceType":"${aws.instance.type}"},{"InstanceCount":1,"InstanceGroupType":"MASTER","InstanceType":"${aws.instance.type}"}]' \
+	    --applications Name=Hadoop \
+	    --steps '[{"Args":["${job.name.inmappercomb}","s3://${aws.bucket.name}/${aws.input}","s3://${aws.bucket.name}/${aws.output.inmappercomb.run2}"],"Type":"CUSTOM_JAR","Jar":"s3://${aws.bucket.name}/${jar.name}","ActionOnFailure":"TERMINATE_CLUSTER","Name":"Custom JAR"}]' \
+		--log-uri s3://${aws.bucket.name}/${aws.log.dir} \
+		--service-role EMR_DefaultRole \
+		--ec2-attributes InstanceProfile=EMR_EC2_DefaultRole,SubnetId=${aws.subnet.id} \
+		--region ${aws.region} \
+		--enable-debugging \
+		--auto-terminate
+
+# Main EMR launch for Secondary sort.
+cloud-secondary-sort: jar upload-app-aws
+	aws emr create-cluster \
+		--name "SecondarySort Cluster" \
+		--release-label ${aws.emr.release} \
+		--instance-groups '[{"InstanceCount":${aws.num.nodes},"InstanceGroupType":"CORE","InstanceType":"${aws.instance.type}"},{"InstanceCount":1,"InstanceGroupType":"MASTER","InstanceType":"${aws.instance.type}"}]' \
+	    --applications Name=Hadoop \
+	    --steps '[{"Args":["${job.name.secondarysort}","s3://${aws.bucket.name}/${aws.input}","s3://${aws.bucket.name}/${aws.output.secondarysort}"],"Type":"CUSTOM_JAR","Jar":"s3://${aws.bucket.name}/${jar.name}","ActionOnFailure":"TERMINATE_CLUSTER","Name":"Custom JAR"}]' \
+		--log-uri s3://${aws.bucket.name}/${aws.log.dir} \
+		--service-role EMR_DefaultRole \
+		--ec2-attributes InstanceProfile=EMR_EC2_DefaultRole,SubnetId=${aws.subnet.id} \
+		--region ${aws.region} \
+		--enable-debugging \
+		--auto-terminate
+		
 # Download output from S3.
 download-output-aws: clean-local-output
 	mkdir ${local.output}

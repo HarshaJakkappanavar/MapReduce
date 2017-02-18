@@ -60,6 +60,10 @@ public class NoCombiner {
 
 }
 
+/**
+ * @author harsha
+ *
+ */
 class NoCombinerMapper extends Mapper<LongWritable, Text, Text, TemperatureAccumulator> {
 
 	/* (non-Javadoc)
@@ -80,7 +84,7 @@ class NoCombinerMapper extends Mapper<LongWritable, Text, Text, TemperatureAccum
 			
 			int temperature = Integer.parseInt(lineArray[3]);
 			String stationId = lineArray[0];
-			
+//			Populates the accumulator datastructure with temprature type and temperature
 			TemperatureAccumulator temperatureAccumulator = new TemperatureAccumulator(tempTypeFromLine, temperature);
 			context.write(new Text(stationId), temperatureAccumulator);
 		}
@@ -91,6 +95,10 @@ class NoCombinerMapper extends Mapper<LongWritable, Text, Text, TemperatureAccum
 	
 }
 
+/**
+ * @author harsha
+ *
+ */
 class NoCombinerReducer extends Reducer<Text, TemperatureAccumulator, Text, MeanTemperatureOutput> {
 
 	/* (non-Javadoc)
@@ -105,8 +113,10 @@ class NoCombinerReducer extends Reducer<Text, TemperatureAccumulator, Text, Mean
 		
 		for(TemperatureAccumulator temperatureAccumulator : temperatureAccumulators){
 			if(temperatureAccumulator.getTemperatureType() == AppConstants.TMIN_VALUE){
+//				updates the count and temperature to the running TMIN temperature accumulator
 				meanTemperatureOutput.updateTMinMeanAccumulator(temperatureAccumulator.getTemperature(), 1);
 			}else if(temperatureAccumulator.getTemperatureType() == AppConstants.TMAX_VALUE){
+//				updates the count and temperature to the running TMAX temperature accumulator
 				meanTemperatureOutput.updateTMaxMeanAccumulator(temperatureAccumulator.getTemperature(), 1);
 			}
 		}

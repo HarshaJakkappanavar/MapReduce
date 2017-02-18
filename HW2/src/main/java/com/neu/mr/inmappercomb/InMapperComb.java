@@ -70,6 +70,8 @@ public class InMapperComb {
  */
 class InMapperCombMapper extends Mapper<LongWritable, Text, Text, TemperatureAccumulator> {
 
+//	Declare the local aggregation datastructure. 
+//	the temperature accumulator is mapped by station id, by temperature type.
 	Map<String, Map<Integer, TemperatureAccumulator>> temperatureAccumulatorMap;
 	
 
@@ -103,10 +105,12 @@ class InMapperCombMapper extends Mapper<LongWritable, Text, Text, TemperatureAcc
 			Integer temperatureType = tempTypeFromLine.equalsIgnoreCase(AppConstants.TMAX_TEXT)?AppConstants.TMAX_VALUE:AppConstants.TMIN_VALUE;
 			String stationId = lineArray[0].trim();
 			
+//			get the map (with temperature type as key and temperature accumulator as value) by station id, initialize if null. 
 			Map<Integer, TemperatureAccumulator> temperatureTypeAccumulator = temperatureAccumulatorMap.get(stationId);
 			if(null == temperatureTypeAccumulator){
 				temperatureTypeAccumulator = new HashMap<Integer, TemperatureAccumulator>();
 			}
+//			get the temperature accumulator by temperature type, initialize if null. Also update the temperature and count.
 			TemperatureAccumulator temperatureAccumulator = temperatureTypeAccumulator.get(temperatureType);
 			if(null == temperatureAccumulator){
 				temperatureAccumulator = new TemperatureAccumulator(tempTypeFromLine, temperature);
@@ -114,12 +118,9 @@ class InMapperCombMapper extends Mapper<LongWritable, Text, Text, TemperatureAcc
 				temperatureAccumulator.updateTemperature(temperature);
 				temperatureAccumulator.updateCountSoFar(new IntWritable(1));
 			}
-			
+//			put the values back to the local aggregation data structure.
 			temperatureTypeAccumulator.put(temperatureType, temperatureAccumulator);
 			temperatureAccumulatorMap.put(stationId, temperatureTypeAccumulator);
-//			
-//			TemperatureAccumulator temperatureAccumulator = new TemperatureAccumulator(tempTypeFromLine, temperature);
-//			context.write(new Text(stationId), temperatureAccumulator);
 		}
 	}
 
@@ -129,7 +130,7 @@ class InMapperCombMapper extends Mapper<LongWritable, Text, Text, TemperatureAcc
 	@Override
 	protected void cleanup(Mapper<LongWritable, Text, Text, TemperatureAccumulator>.Context context)
 			throws IOException, InterruptedException {
-		
+//		Emits the output
 		for(Entry<String, Map<Integer, TemperatureAccumulator>> tempAccumulatorMapEntry : temperatureAccumulatorMap.entrySet()){
 			for(Entry<Integer, TemperatureAccumulator> tempTypeAccumulatorEntry : tempAccumulatorMapEntry.getValue().entrySet()){
 				context.write(new Text(tempAccumulatorMapEntry.getKey()), tempTypeAccumulatorEntry.getValue());
@@ -139,6 +140,10 @@ class InMapperCombMapper extends Mapper<LongWritable, Text, Text, TemperatureAcc
 	
 }
 
+/**
+ * @author harsha
+ *
+ */
 class InMapperCombReducer extends Reducer<Text, TemperatureAccumulator, Text, MeanTemperatureOutput> {
 
 	/* (non-Javadoc)
@@ -153,8 +158,10 @@ class InMapperCombReducer extends Reducer<Text, TemperatureAccumulator, Text, Me
 		
 		for(TemperatureAccumulator temperatureAccumulator : temperatureAccumulators){
 			if(temperatureAccumulator.getTemperatureType() == AppConstants.TMIN_VALUE){
+//				updates the count and temperature to the running TMIN temperature accumulator
 				meanTemperatureOutput.updateTMinMeanAccumulator(temperatureAccumulator.getTemperature(), temperatureAccumulator.getCountSoFar().get());
 			}else if(temperatureAccumulator.getTemperatureType() == AppConstants.TMAX_VALUE){
+//				updates the count and temperature to the running TMAX temperature accumulator
 				meanTemperatureOutput.updateTMaxMeanAccumulator(temperatureAccumulator.getTemperature(), temperatureAccumulator.getCountSoFar().get());
 			}
 		}

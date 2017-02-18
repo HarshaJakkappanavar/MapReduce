@@ -71,6 +71,10 @@ public class SecondarySort {
 
 }
 
+/**
+ * @author harsha
+ *
+ */
 class SecondarySortMapper extends Mapper<LongWritable, Text, StationYearKey, TemperatureAccumulator> {
 
 	/* (non-Javadoc)
@@ -95,6 +99,7 @@ class SecondarySortMapper extends Mapper<LongWritable, Text, StationYearKey, Tem
 			int temperature = Integer.parseInt(lineArray[3]);
 			
 			StationYearKey stationYearKey = new StationYearKey(stationId, year);
+//			Populates the accumulator datastructure with temprature type and temperature
 			TemperatureAccumulator temperatureAccumulator = new TemperatureAccumulator(tempTypeFromLine, temperature);
 
 			context.write(stationYearKey, temperatureAccumulator);
@@ -106,6 +111,10 @@ class SecondarySortMapper extends Mapper<LongWritable, Text, StationYearKey, Tem
 	
 }
 
+/**
+ * @author harsha
+ *
+ */
 class SecondarySortReducer extends Reducer<StationYearKey, TemperatureAccumulator, NullWritable, Text> {
 	
 	NullWritable nw =  NullWritable.get();
@@ -117,18 +126,34 @@ class SecondarySortReducer extends Reducer<StationYearKey, TemperatureAccumulato
 	protected void reduce(StationYearKey key, Iterable<TemperatureAccumulator> temperatureAccumulators,
 			Reducer<StationYearKey, TemperatureAccumulator, NullWritable, Text>.Context context)
 			throws IOException, InterruptedException {
-
+		
+		String stationId = key.getStationId().toString();
+//		Hold the changing year in a station.
+		int year = key.getYear().get();
+//		Holds the output mean temperature both min and max.
 		MeanTemperatureOutput meanTemperatureOutput = new MeanTemperatureOutput();
+//		Constructs the output string.
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append(stationId + ", [(");
 		
 		for(TemperatureAccumulator temperatureAccumulator : temperatureAccumulators){
+//			update the output string everytime a new year is encountered. Re-initialize the variables.
+			if(key.getYear().get() != year){
+				stringBuilder.append(year + ", " + meanTemperatureOutput.toString() + "), (");
+				year = key.getYear().get();
+				meanTemperatureOutput = new MeanTemperatureOutput();
+			}
+//			Builds up the sum of temperatures and counts for both TMIN and TMAX
 			if(temperatureAccumulator.getTemperatureType() == AppConstants.TMIN_VALUE){
 				meanTemperatureOutput.updateTMinMeanAccumulator(temperatureAccumulator.getTemperature(), 1);
 			}else if(temperatureAccumulator.getTemperatureType() == AppConstants.TMAX_VALUE){
 				meanTemperatureOutput.updateTMaxMeanAccumulator(temperatureAccumulator.getTemperature(), 1);
 			}
 		}
-//		TODO write a string builder and append the required text.
-		context.write(nw, new Text("Dummy"));
+		
+//		constructs the output of the last year for this station and writes it on the context.
+		stringBuilder.append(year + ", " + meanTemperatureOutput.toString() + ")]");
+		context.write(nw, new Text(stringBuilder.toString()));
 	}
 	
 	
