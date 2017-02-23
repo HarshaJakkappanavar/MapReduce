@@ -11,6 +11,7 @@ import org.apache.hadoop.io.Writable;
 /**
  * @author harsha
  *
+ *	Custom Generic Writable class to emit objects of PageRankEntity, Text, DoubleWritable class from Mapper and collect at the Reducer
  */
 public class PageRankGenericWritable extends GenericWritable {
 	

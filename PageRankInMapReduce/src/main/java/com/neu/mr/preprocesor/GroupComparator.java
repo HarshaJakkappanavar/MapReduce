@@ -11,7 +11,8 @@ import com.neu.mr.entity.PageRankEntity;
 /**
  * @author harsha
  * 
- * Groups the intermediate keys by station id and ignores the year. This means that all the intermediate keys with the same station id are processed in the same reduce call.
+ * Groups the intermediate keys by page name and ignores all other attributes of the objects. 
+ * This means that all the intermediate keys with the same page name are processed in the same reduce call.
  */
 public class GroupComparator extends WritableComparator {
 

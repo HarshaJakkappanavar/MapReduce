@@ -9,7 +9,7 @@ import com.neu.mr.entity.PageRankEntity;
 
 /**
  * @author harsha
- * Partiotions the intermediate keys by station id using hashcode.
+ * Partiotions the intermediate keys by page name using hashcode.
  */
 public class HashPartitioner extends Partitioner<PageRankEntity, PageRankEntity> {
 

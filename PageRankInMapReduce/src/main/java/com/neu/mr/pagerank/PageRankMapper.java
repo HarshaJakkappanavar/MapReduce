@@ -19,6 +19,11 @@ import com.neu.mr.utility.PageRankUtility;
 /**
  * @author harsha
  *
+ *	- Reads the intermediate output from the Preprocessing job. 
+ *	- Creates a PageRankEntity object.
+ *	- Emits the object
+ *	- if this page has no outlinks, then the page rank of this page is contributed towards the dangling factor calculation.
+ *	- else the page rank of this page is passed on to all the outward linked pages.
  */
 public class PageRankMapper extends Mapper<LongWritable, Text, Text, PageRankGenericWritable> {
 

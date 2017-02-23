@@ -11,7 +11,8 @@ import com.neu.mr.entity.PageRankEntity;
 /**
  * @author harsha
  *
- * Controls how the keys are sorted	before they are passed to reducer
+ * Controls how the keys are sorted	before they are passed to reducer.
+ * The value object is sorted such that the first object in the Iterable object "value", is always the real PageRankEntity object with content. 
  */
 public class KeyComparator extends WritableComparator {
 	

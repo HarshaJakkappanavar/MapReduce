@@ -18,6 +18,11 @@ import org.apache.hadoop.io.WritableComparable;
 /**
  * @author harsha
  *
+ *	Data structure to hold the page information. It holds,
+ *	- Page name
+ *	- Page Rank
+ *	- Number of Outlinks
+ *	- List of Outlinks from this page.
  */
 public class PageRankEntity implements Writable, WritableComparable<PageRankEntity> {
 	
@@ -134,6 +139,13 @@ public class PageRankEntity implements Writable, WritableComparable<PageRankEnti
 		for(Text outlink : getOutlinks()){
 			stringBuilder.append(outlink.toString() + "~");
 		}
+		return stringBuilder.toString();
+	}
+	
+	public String toStringForTopK() {
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append(getPageName() + " : ");
+		stringBuilder.append(getPageRank());
 		return stringBuilder.toString();
 	}
 

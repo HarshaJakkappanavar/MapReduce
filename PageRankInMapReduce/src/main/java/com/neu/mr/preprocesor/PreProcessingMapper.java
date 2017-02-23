@@ -28,6 +28,7 @@ import com.neu.mr.utility.WikiParser;
 /**
  * @author harsha
  *
+ *	Uses the parser utility provided and parses the .bz2 formatted file to a simple application(this application) friendly file (more focused on what's important). 
  */
 public class PreProcessingMapper extends Mapper<LongWritable, Text, PageRankEntity, PageRankEntity> {
 	

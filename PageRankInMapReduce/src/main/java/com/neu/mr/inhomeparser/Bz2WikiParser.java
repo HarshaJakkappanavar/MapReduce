@@ -22,6 +22,10 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
+
+/**
+ * This class was given as part of the HW material.
+ */
 /** Decompresses bz2 file and parses Wikipages on each line. */
 public class Bz2WikiParser {
 	private static Pattern namePattern;

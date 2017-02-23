@@ -21,6 +21,10 @@ import com.neu.mr.entity.PageRankEntity;
 /**
  * @author harsha
  *
+ *
+ *	Receives the local top 100 pages from all the mappers into a single reducer.
+ *	emits the top 100 pages from this list based on the higher page rank values,
+ *	making these pages globally among the top 100 pages with better page rank values.
  */
 public class TopKReducer extends Reducer<NullWritable, PageRankEntity, NullWritable, Text> {
 
@@ -44,7 +48,7 @@ public class TopKReducer extends Reducer<NullWritable, PageRankEntity, NullWrita
 			
 		}
 
-		
+//		Sort in the descending order of the page rank values.
 		Collections.sort(globalTop100Map, new Comparator<PageRankEntity>() {
 
 			@Override
@@ -55,7 +59,7 @@ public class TopKReducer extends Reducer<NullWritable, PageRankEntity, NullWrita
 		});
 		globalTop100Map = globalTop100Map.subList(0, 100);
 		for(PageRankEntity pageRankEntity : globalTop100Map){
-			context.write(NullWritable.get(), new Text(pageRankEntity.toString()));
+			context.write(NullWritable.get(), new Text(pageRankEntity.toStringForTopK()));
 		}
 	
 	}

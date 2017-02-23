@@ -31,6 +31,10 @@ import com.neu.mr.topk.TopKReducer;
 /**
  * @author harsha
  *
+ * This is the main run class. The execution is divided into 3 jobs.
+ * 1. Pre-processing Job
+ * 2. Page Rank calculation and refining Job
+ * 3. Fishing out the Top-100 pages with highest page ranks job.
  */
 public class PageRankInMapReduceProgram {
 
@@ -49,7 +53,23 @@ public class PageRankInMapReduceProgram {
 		String outputPath = cmdLineArgs[cmdLineArgs.length - 1];
 		
 //		START of PREPROCESSING JOB
-		boolean firstJobStatus = runPreProcessingJob(configuration, cmdLineArgs);
+		Job preProcessingJob = preparePreProcessingJob(configuration);
+		
+		for(int i = 0; i < cmdLineArgs.length - 1; i++){
+			FileInputFormat.addInputPath(preProcessingJob, new Path(cmdLineArgs[i]));
+		}
+		FileOutputFormat.setOutputPath(preProcessingJob, new Path(cmdLineArgs[cmdLineArgs.length - 1] + AppConstants.INTERMEDIATE_OUTPUT + "1"));
+		
+		boolean firstJobStatus = preProcessingJob.waitForCompletion(true);
+		if(!firstJobStatus)
+			throw new Exception("Preprocessing job failed.");
+		
+
+//		Get the total pages found based on the number of reduce input records processed and initialize variables onto the configuration.
+		AppConstants.totalPages = preProcessingJob.getCounters().findCounter("org.apache.hadoop.mapred.Task$Counter", "REDUCE_OUTPUT_RECORDS").getValue();
+		configuration.set("totalPages", AppConstants.totalPages.toString());
+		configuration.set("isFirstIteration", "true");
+		configuration.set("danglingFactor", "0.0");
 //		END of PREPROCESSING JOB
 
 		boolean secondJobStatus = false;
@@ -59,10 +79,13 @@ public class PageRankInMapReduceProgram {
 		
 			Job pageRankJob = preparePageRankJob(configuration);
 			
-			FileInputFormat.addInputPath(pageRankJob, new Path(outputPath + "/intermediate_" + i));
-			FileOutputFormat.setOutputPath(pageRankJob, new Path(outputPath + "/intermediate_" + (i+1)));
+			FileInputFormat.addInputPath(pageRankJob, new Path(outputPath + AppConstants.INTERMEDIATE_OUTPUT + i));
+			FileOutputFormat.setOutputPath(pageRankJob, new Path(outputPath + AppConstants.INTERMEDIATE_OUTPUT + (i+1)));
 			
 			secondJobStatus = pageRankJob.waitForCompletion(true);
+			if(!secondJobStatus)
+				throw new Exception("Page Rank processing job failed on the " + i + " iteration.");
+			
 			configuration.set("isFirstIteration", "false");
 			
 //			Using counters to set the dangling factor for the (i + 1)th iteration.
@@ -76,9 +99,10 @@ public class PageRankInMapReduceProgram {
 //		END of PAGE RANK JOB
 		
 //		START of TOP-100 JOB
+		
 		Job topKJob = prepareTopKJob(configuration);
 		
-		FileInputFormat.addInputPath(topKJob, new Path(outputPath + "/intermediate_" + (AppConstants.MAX_RUNS + 1)));
+		FileInputFormat.addInputPath(topKJob, new Path(outputPath + AppConstants.INTERMEDIATE_OUTPUT + (AppConstants.MAX_RUNS + 1)));
 		FileOutputFormat.setOutputPath(topKJob, new Path(outputPath + "/top100"));
 		
 		boolean thirdJobStatus = topKJob.waitForCompletion(true);
@@ -105,11 +129,9 @@ public class PageRankInMapReduceProgram {
 	 * @param configuration
 	 * @param cmdLineArgs 
 	 * @return
-	 * @throws IOException
-	 * @throws InterruptedException 
-	 * @throws ClassNotFoundException 
+	 * @throws Exception
 	 */
-	private static boolean runPreProcessingJob(Configuration configuration, String[] cmdLineArgs) throws Exception {
+	private static Job preparePreProcessingJob(Configuration configuration) throws Exception {
 		Job preProcessingJob = new Job(configuration, "PageRankInMapReduceProgram");
 		preProcessingJob.setJarByClass(PageRankInMapReduceProgram.class);
 		
@@ -127,19 +149,7 @@ public class PageRankInMapReduceProgram {
 		preProcessingJob.setSortComparatorClass(KeyComparator.class);
 		preProcessingJob.setGroupingComparatorClass(GroupComparator.class);
 		
-		for(int i = 0; i < cmdLineArgs.length - 1; i++){
-			FileInputFormat.addInputPath(preProcessingJob, new Path(cmdLineArgs[i]));
-		}
-		FileOutputFormat.setOutputPath(preProcessingJob, new Path(cmdLineArgs[cmdLineArgs.length - 1] + AppConstants.INTERMEDIATE_OUTPUT_1));
-		
-
-//		Get the total pages found based on the number of reduce input records processed and initialize variables onto the configuration.
-		AppConstants.totalPages = preProcessingJob.getCounters().findCounter("org.apache.hadoop.mapred.Task$Counter", "REDUCE_OUTPUT_RECORDS").getValue();
-		configuration.set("totalPages", AppConstants.totalPages.toString());
-		configuration.set("isFirstIteration", "true");
-		configuration.set("danglingFactor", "0.0");
-		
-		return preProcessingJob.waitForCompletion(true);
+		return preProcessingJob;
 	}
 	
 	/**

@@ -14,6 +14,7 @@ import com.neu.mr.entity.PageRankEntity;
 /**
  * @author harsha
  *
+ *	Picks the first object in the Iterable "value" and emits it.
  */
 public class PreProcessingReducer extends Reducer<PageRankEntity, PageRankEntity, NullWritable, Text> {
 
@@ -27,12 +28,8 @@ public class PreProcessingReducer extends Reducer<PageRankEntity, PageRankEntity
 		PageRankEntity pageRankEntity = null;
 		
 		for(PageRankEntity valueEntity : value){
-//			if(null == pageRankEntity){
 			pageRankEntity = valueEntity;
 			break;
-//			}else if(valueEntity.getOutlinkSize() != 0){
-//				pageRankEntity = valueEntity;
-//			}
 		}
 		
 		if(null != pageRankEntity){

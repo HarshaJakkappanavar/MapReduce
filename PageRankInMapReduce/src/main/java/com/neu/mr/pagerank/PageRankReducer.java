@@ -19,6 +19,9 @@ import com.neu.mr.entity.PageRankGenericWritable;
 /**
  * @author harsha
  *
+ *	- Collects the inlinks to this page.
+ *	- If the key is "danglingFactorReduce", then all the page rank contributions of all the dangling nodes are collected and set to the counter.
+ *	- else page rank from the inlinks are added and a new page rank is calculated and updated.
  */
 public class PageRankReducer extends Reducer<Text, PageRankGenericWritable, NullWritable, Text> {
 
@@ -57,8 +60,8 @@ public class PageRankReducer extends Reducer<Text, PageRankGenericWritable, Null
 			Double danglingFactorContribution = danglingFactor / AppConstants.totalPages.doubleValue();
 			
 //			calculate the new page rank
-			Double newPageRank = (AppConstants.alphaValue / AppConstants.totalPages.doubleValue())
-					+ (AppConstants.inverseAplhaValue * (danglingFactorContribution + inlinksPageRankSummation));
+			Double newPageRank = (AppConstants.ALPHA_VALUE / AppConstants.totalPages.doubleValue())
+					+ (AppConstants.INVERSE_ALPHA_VALUE * (danglingFactorContribution + inlinksPageRankSummation));
 			
 			pageRankEntity.setPageRank(new DoubleWritable(newPageRank));
 			
@@ -77,9 +80,6 @@ public class PageRankReducer extends Reducer<Text, PageRankGenericWritable, Null
 			}
 			
 			context.getCounter(AppConstants.DANGLING_FACTOR_ENUM.NEXT_DANGLING_FACTOR).setValue(Double.doubleToLongBits(runningDanglingFactor));
-//			AppConstants.nextDanglingFactor = runningDanglingFactor;
-//			Configuration configuration = context.getConfiguration();
-//			configuration.set("nextDanglingFactor", runningDanglingFactor.toString());
 		}
 	}
 

@@ -20,6 +20,12 @@ import com.neu.mr.entity.PageRankEntity;
 public class PageRankUtility {
 	
 
+	/**
+	 * @param value
+	 * @return PageRankEntity object
+	 * 
+	 * 	Parses the input line, extract the attributes and returns a PageRankEntity object
+	 */
 	public static PageRankEntity getPageRankEntityFromValue(Text value) {
 
 		StringBuilder stringBuilder = new StringBuilder(value.toString());

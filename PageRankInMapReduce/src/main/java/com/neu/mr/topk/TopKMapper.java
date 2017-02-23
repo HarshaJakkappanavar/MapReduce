@@ -21,7 +21,9 @@ import com.neu.mr.utility.PageRankUtility;
 
 /**
  * @author harsha
- *
+ *	
+ *	Initializes a local List to hold all the page rank entity object
+ *	and later emits the Top 100 pages with highest page ranks local to this mapper.
  */
 public class TopKMapper extends Mapper<LongWritable, Text, NullWritable, PageRankEntity> {
 	
