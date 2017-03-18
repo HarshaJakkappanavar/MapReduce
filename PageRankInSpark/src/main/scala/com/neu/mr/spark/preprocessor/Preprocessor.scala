@@ -14,9 +14,10 @@ class Preprocessor(sc: SparkContext) extends Serializable{
   def run(input: String) : RDD[(String, List[String])] = {
     
     val inputLines = sc.textFile(input, sc.defaultParallelism);
+    println("Number of lines from the file: " + inputLines.count());
     
     val parsedLines = parse(inputLines);
-    
+    println("Number of lines once parsed: " + parsedLines.count());
     return createGraph(parsedLines);
   }
   
@@ -25,10 +26,10 @@ class Preprocessor(sc: SparkContext) extends Serializable{
    */
   def parse(inputLines: RDD[String]) : RDD[String] = {
     
-    return inputLines
-              .map(line => Bz2Parser.parseLine(line))
-              .filter(line => line.length >= 1)
-              .flatMap(line => line.split(AppConstants.NEW_LINE));
+    inputLines
+          .map(line => Bz2Parser.parseLine(line))
+          .filter(line => line.length >= 1)
+          .flatMap(line => line.split(AppConstants.NEW_LINE));
   }
   
   /**
@@ -44,6 +45,7 @@ class Preprocessor(sc: SparkContext) extends Serializable{
   
   /**
    * Creates an adjacency graph for each of the parsed line
+   * String => (String, List[String])
    */
   def convertLineToGraph = {
     (parsedLine: String) => 

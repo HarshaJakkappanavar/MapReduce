@@ -5,8 +5,8 @@
 spark.root=/usr/local/spark
 jar.name=PageRankInSpark-1.0.jar
 jar.path=target/${jar.name}
-job.name=com/neu/mr/spark/program/PageRankInSpark
-local.input=/home/harsha/NortheasternUniversity/Semester3/MapReduce/data/wiki
+job.name=com.neu.mr.spark.program.PageRankInSpark
+local.input=/home/harsha/NortheasternUniversity/Semester3/MapReduce/data/wiki/local
 local.output=output
 # Pseudo-Cluster Execution
 hdfs.user.name=harsha
@@ -17,10 +17,10 @@ aws.emr.release=emr-5.2.1
 aws.region=us-east-1
 aws.bucket.name=harshaj-bucket
 aws.subnet.id=subnet-a5b9c7fe
-aws.input=input
+aws.input=input/local
 aws.output=output
 aws.log.dir=log
-aws.num.nodes=10
+aws.num.nodes=5
 aws.instance.type=m4.large
 # -----------------------------------------------------------
 
@@ -55,7 +55,7 @@ upload-app-aws:
 # Main EMR launch.
 cloud: jar upload-app-aws delete-output-aws
 	aws emr create-cluster \
-		--name "HW4 Cluster" \
+		--name "PageRankInSpark Cluster" \
 		--release-label ${aws.emr.release} \
 		--instance-groups '[{"InstanceCount":${aws.num.nodes},"InstanceGroupType":"CORE","InstanceType":"${aws.instance.type}"},{"InstanceCount":1,"InstanceGroupType":"MASTER","InstanceType":"${aws.instance.type}"}]' \
 	    --applications Name=Spark \
