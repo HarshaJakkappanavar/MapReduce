@@ -21,12 +21,9 @@ object PageRankInSpark extends Serializable{
      */
     val preprocessJob = new Preprocessor(sc);
     
-    val linksGraph = preprocessJob.run(args(0)).persist;
+    val linksGraph = preprocessJob.run(args(0));
     
-//    val totalPages = linksGraph.count();
-    val totalPages = 18619;
-    
-    println("total pages: " + totalPages);
+    val totalPages = linksGraph.count();
     
     val init_PR = 1.0 / totalPages.doubleValue();
     
@@ -36,37 +33,31 @@ object PageRankInSpark extends Serializable{
     var danglingFactor = sc.doubleAccumulator;
     danglingFactor.add(computeDanglingFactor(danglingNodeGraph, totalPages));
     
-    
     /**
      * Calculating and refining the page rank
      */
     val pageRankJob = new PageRank(sc, totalPages);
     for(iteration <- 1 to 10){
-      println("iteration: " + iteration);
-      println("Dangling factor: " + danglingFactor.toString());
     	pageRankGraph = pageRankJob.run(pageRankGraph, danglingFactor.sum);
     	
-      danglingNodeGraph = getDanglingNodeGraph(pageRankGraph);
+    	danglingNodeGraph = getDanglingNodeGraph(pageRankGraph);
       danglingFactor.reset();
       danglingFactor.add(computeDanglingFactor(danglingNodeGraph, totalPages));
-      
-      //changes here
-      var sum = sc.doubleAccumulator;
-      pageRankGraph.map(x => {
-    	  sum.add(x._2._1);
-    	  println(x);
-    	  x;
-      });
-      sc.parallelize(pageRankGraph.collect(), 1).saveAsTextFile(args(1) + "/pagerank" + iteration);
-
-      println("iteration: " + iteration +" => Sum: "+sum.sum);
     }
     
     /**
      * Printing the top-100 pages to output file.
      */
-    sc.parallelize(pageRankGraph.map(x => (x._2._1, x._1)).top(100), 1).saveAsTextFile(args(1)+"/topK")
+    /**
+     * Using rdd.top()
+     */
+//    sc.parallelize(pageRankGraph.map(x => (x._2._1, x._1)).top(100), 1).saveAsTextFile(args(1));
     
+    /** 
+     *  Using rdd.take()
+     */
+    val top100FromPartition = pageRankGraph.map(x => (x._1, x._2._1)).takeOrdered(100)(Ordering[Double].reverse.on{(tuple: (String, Double)) => (tuple._2)});
+    sc.parallelize(top100FromPartition).repartition(1).sortBy(-_._2).saveAsTextFile(args(1));
     sc.stop();
   }
   

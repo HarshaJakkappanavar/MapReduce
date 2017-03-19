@@ -13,11 +13,8 @@ class Preprocessor(sc: SparkContext) extends Serializable{
    */
   def run(input: String) : RDD[(String, List[String])] = {
     
-    val inputLines = sc.textFile(input, sc.defaultParallelism);
-    println("Number of lines from the file: " + inputLines.count());
-    
+    val inputLines = sc.textFile(input);
     val parsedLines = parse(inputLines);
-    println("Number of lines once parsed: " + parsedLines.count());
     return createGraph(parsedLines);
   }
   
