@@ -9,18 +9,17 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-import com.neu.mr.constants.AppConstants;
+import com.neu.mr.constants.AppConstants; 
 
 /**
  * @author harsha
  *
  */
-public class PageRankMapper extends Mapper<LongWritable, Text, LongWritable, Text> {
+public class DanglingNodeMapper extends Mapper<LongWritable, Text, LongWritable, Text> {
 	
 	private static Long TOTAL_NODES;
 	private static Double[] pageRanks;
@@ -57,16 +56,12 @@ public class PageRankMapper extends Mapper<LongWritable, Text, LongWritable, Tex
 			Mapper<LongWritable, Text, LongWritable, Text>.Context context)
 			throws IOException, InterruptedException {
 		
-//		Value Format: pageNameNode~outlinkSize(or total number of pages if dangling)~outlinkNode1~outlinkNode2...
-//		Ex: 0~3~1~3~4
-		String[] valueParts = value.toString().split("~");
-		Long rowVal = Long.parseLong(valueParts[0]);
-		Long outlinkSize = Long.parseLong(valueParts[1]);
-		for(int i = 2; i < valueParts.length; i++){
-			Long colVal = Long.parseLong(valueParts[i]);
-			Double contribution = pageRanks[rowVal.intValue()]/outlinkSize.doubleValue();
-			context.write(new LongWritable(colVal), new Text(AppConstants.PAGE_RANK_CONTRIBUTION + ":" + contribution));
+		Long rowVal = Long.parseLong(value.toString());
+		for(int colVal = 0; colVal < TOTAL_NODES; colVal++){
+			Double contribution = pageRanks[rowVal.intValue()]/TOTAL_NODES.doubleValue();
+			context.write(new LongWritable(colVal), new Text(AppConstants.DANGLING_NODE_CONTRIBUTION + ":" + contribution));
 		}
+		
 	}
 
 }

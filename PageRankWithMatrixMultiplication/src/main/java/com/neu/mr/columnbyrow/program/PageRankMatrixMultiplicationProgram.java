@@ -3,17 +3,23 @@
  */
 package com.neu.mr.columnbyrow.program;
 
+import java.net.URI;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
+import com.neu.mr.columnbyrow.pagerank.DanglingNodeMapper;
 import com.neu.mr.columnbyrow.pagerank.PageRankJob;
 import com.neu.mr.columnbyrow.preprocessor.PreprocessJob;
 import com.neu.mr.columnbyrow.topk.TopKJob;
 import com.neu.mr.constants.AppConstants;
+import com.neu.mr.columnbyrow.pagerank.PageRankMapper;
 
 /**
  * @author harsha
@@ -60,16 +66,17 @@ public class PageRankMatrixMultiplicationProgram {
 		for(int i = 1; i <= AppConstants.MAX_RUNS; i++){
 			
 			Job pageRankJob = PageRankJob.configure(configuration);
-			
-			
-			FileInputFormat.addInputPath(pageRankJob, new Path(outputPath + AppConstants.PREPROCESSING_OUTPUT + "/M-r-00000"));
-			FileOutputFormat.setOutputPath(pageRankJob, new Path(outputPath + AppConstants.INTERMEDIATE_OUTPUT + i));
-			
+
 			if(i == 1) {
-				pageRankJob.addCacheFile(new Path(outputPath + AppConstants.PREPROCESSING_OUTPUT + "/R-r-00000#pageRankCacheFile").toUri());
+				pageRankJob.addCacheFile(new URI(outputPath + AppConstants.PREPROCESSING_OUTPUT + "/R-r-00000" + "#pageRankCacheFile"));
 			}else {
-				pageRankJob.addCacheFile(new Path(outputPath + AppConstants.INTERMEDIATE_OUTPUT + (i-1) + "#pageRankCacheFile").toUri());
+				pageRankJob.addCacheFile(new URI(outputPath + AppConstants.INTERMEDIATE_OUTPUT + (i-1) + "#pageRankCacheFile"));
 			}
+			
+			MultipleInputs.addInputPath(pageRankJob, new Path(outputPath + AppConstants.PREPROCESSING_OUTPUT + "/M-r-00000"), TextInputFormat.class, PageRankMapper.class);
+			MultipleInputs.addInputPath(pageRankJob, new Path(outputPath + AppConstants.PREPROCESSING_OUTPUT + "/D-r-00000"), TextInputFormat.class, DanglingNodeMapper.class);
+			
+			FileOutputFormat.setOutputPath(pageRankJob, new Path(outputPath + AppConstants.INTERMEDIATE_OUTPUT + i));
 			
 			secondJobStatus = pageRankJob.waitForCompletion(true);
 			if(!secondJobStatus)

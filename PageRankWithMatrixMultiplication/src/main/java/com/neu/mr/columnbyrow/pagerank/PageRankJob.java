@@ -25,9 +25,9 @@ public class PageRankJob {
 		Job pageRankJob = new Job(configuration, "PageRankJob");
 		pageRankJob.setJarByClass(PageRankMatrixMultiplicationProgram.class);
 		
-		pageRankJob.setMapperClass(PageRankMapper.class);
+//		pageRankJob.setMapperClass(PageRankMapper.class);
 		pageRankJob.setMapOutputKeyClass(LongWritable.class);
-		pageRankJob.setMapOutputValueClass(DoubleWritable.class);
+		pageRankJob.setMapOutputValueClass(Text.class);
 		
 		pageRankJob.setReducerClass(PageRankReducer.class);
 		pageRankJob.setOutputKeyClass(NullWritable.class);

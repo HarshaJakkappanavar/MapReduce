@@ -35,4 +35,8 @@ public class AppConstants {
 
 	public static final String TOP100 = "/colbyrow/top100";
 
+	public static final String DANGLING_NODE_CONTRIBUTION = "D";
+
+	public static final String PAGE_RANK_CONTRIBUTION = "PR";
+
 }

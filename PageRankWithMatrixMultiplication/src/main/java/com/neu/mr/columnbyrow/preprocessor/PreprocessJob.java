@@ -50,6 +50,7 @@ public class PreprocessJob {
 		FileOutputFormat.setOutputPath(preProcessingJob, new Path(cmdLineArgs[cmdLineArgs.length - 1] + AppConstants.PREPROCESSING_OUTPUT));
 		
 		MultipleOutputs.addNamedOutput(preProcessingJob, "M", TextOutputFormat.class, NullWritable.class, Text.class);
+		MultipleOutputs.addNamedOutput(preProcessingJob, "D", TextOutputFormat.class, NullWritable.class, Text.class);
 		MultipleOutputs.addNamedOutput(preProcessingJob, "R", TextOutputFormat.class, NullWritable.class, Text.class);
 		MultipleOutputs.addNamedOutput(preProcessingJob, "pageMap", TextOutputFormat.class, Text.class, Text.class);
 		

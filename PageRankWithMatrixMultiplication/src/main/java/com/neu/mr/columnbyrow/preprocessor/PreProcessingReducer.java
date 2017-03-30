@@ -62,8 +62,8 @@ public class PreProcessingReducer extends Reducer<PageRankEntity, PageRankEntity
 		
 		if(!pagesMapping.containsKey(pageName)){
 			pagesMapping.put(pageName, count);
+			multipleOutputs.write("pageMap", new Text(pageName), new Text(String.valueOf(count++)));
 		}
-		multipleOutputs.write("pageMap", new Text(pageName), new Text(String.valueOf(count++)));
 		
 		List<Long> outlinksMap = new ArrayList<Long>();
 		for(Text outlink : pageRankEntity.getOutlinks()){
@@ -71,7 +71,7 @@ public class PreProcessingReducer extends Reducer<PageRankEntity, PageRankEntity
 			if(null == pageMap){
 				pageMap = count++;
 				pagesMapping.put(outlink.toString(), pageMap);
-				multipleOutputs.write("pageMap", outlink.toString(), new Text(String.valueOf(pageMap)));
+				multipleOutputs.write("pageMap", outlink, new Text(String.valueOf(pageMap)));
 			}
 			outlinksMap.add(pagesMapping.get(outlink.toString()));
 		}
@@ -97,17 +97,17 @@ public class PreProcessingReducer extends Reducer<PageRankEntity, PageRankEntity
 			throws IOException, InterruptedException {
 		final Long TOTAL_NODES = count;
 		final Double DEFAULT_VALUE = 1/TOTAL_NODES.doubleValue();
-//		for(Long danglingNode : danglingNodes){
-//			multipleOutputs.write("D", NullWritable.get(), new Text(danglingNode + ":" + DEFAULT_VALUE));
-//		}
-		StringBuilder stringBuilder = new StringBuilder();
+		for(Long danglingNode : danglingNodes){
+			multipleOutputs.write("D", NullWritable.get(), new Text(danglingNode.toString()));
+		}
+//		StringBuilder stringBuilder = new StringBuilder();
 		for(long i = 0L; i < TOTAL_NODES; i++){
 			multipleOutputs.write("R", NullWritable.get(), new Text(i + ":" + DEFAULT_VALUE));
-			stringBuilder.append("~" + i);
+//			stringBuilder.append("~" + i);
 		}
-		for(Long danglingNode : danglingNodes){
-			multipleOutputs.write("M", NullWritable.get(), new Text(danglingNode + "~" + TOTAL_NODES + stringBuilder.toString()));
-		}
+//		for(Long danglingNode : danglingNodes){
+//			multipleOutputs.write("M", NullWritable.get(), new Text(danglingNode + "~" + TOTAL_NODES + stringBuilder.toString()));
+//		}
 		multipleOutputs.close();
 		context.getCounter(AppConstants.COUNTERS.TOTAL_NODES).setValue(TOTAL_NODES);
 	}
