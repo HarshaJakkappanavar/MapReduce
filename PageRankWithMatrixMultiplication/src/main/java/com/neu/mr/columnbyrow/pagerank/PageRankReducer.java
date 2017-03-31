@@ -6,7 +6,6 @@ package com.neu.mr.columnbyrow.pagerank;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -28,24 +27,22 @@ public class PageRankReducer extends Reducer<LongWritable, Text, NullWritable, T
 			Reducer<LongWritable, Text, NullWritable, Text>.Context context)
 			throws IOException, InterruptedException {
 		
-
-		
 		Double totalContribution = 0.0;
 		Double danglingContribution = 0.0;
 		
 		for(Text valTuple : value){
 			String[] valTupleParts = valTuple.toString().split(":");
-			if(valTupleParts[0].equalsIgnoreCase(AppConstants.DANGLING_NODE_CONTRIBUTION)){
-				danglingContribution += Double.parseDouble(valTupleParts[1]);
-			}else if(valTupleParts[0].equalsIgnoreCase(AppConstants.PAGE_RANK_CONTRIBUTION)) {
-				totalContribution += Double.parseDouble(valTupleParts[1]);
+			if(valTupleParts[0].equalsIgnoreCase(AppConstants.PAGE_RANK_CONTRIBUTION)) {
+				totalContribution += Double.valueOf(valTupleParts[1]);
+			}else if(valTupleParts[0].equalsIgnoreCase(AppConstants.DANGLING_NODE_CONTRIBUTION)){
+				danglingContribution = Double.valueOf(valTupleParts[1]);
 			}
 		}
 
 		Configuration configuration = context.getConfiguration();
 		Long totalNodes = configuration.getLong("TOTAL_NODES", 0L);
 		
-		Double newPageRank = (AppConstants.ALPHA_VALUE / totalNodes) + AppConstants.INVERSE_ALPHA_VALUE * (totalContribution + danglingContribution);
+		Double newPageRank = (AppConstants.ALPHA_VALUE / totalNodes.doubleValue()) + (AppConstants.INVERSE_ALPHA_VALUE * (totalContribution + danglingContribution));
 		context.write(NullWritable.get(), new Text(key.get() + ":" + newPageRank));
 		
 	}

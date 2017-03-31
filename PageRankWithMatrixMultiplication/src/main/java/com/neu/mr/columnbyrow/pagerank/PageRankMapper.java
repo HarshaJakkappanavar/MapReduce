@@ -5,11 +5,11 @@ package com.neu.mr.columnbyrow.pagerank;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -36,17 +36,33 @@ public class PageRankMapper extends Mapper<LongWritable, Text, LongWritable, Tex
 		
 		TOTAL_NODES = configuration.getLong("TOTAL_NODES", 0L);
 		pageRanks = new Double[TOTAL_NODES.intValue()];
+		String pageRankCacheFileName = configuration.get("PAGE_RANK_CACHE_FILE");
+		File pageRankCacheFile = new File("./"+pageRankCacheFileName);
+		if(pageRankCacheFile.isDirectory()){
+			File[] pageRankCacheFiles = pageRankCacheFile.listFiles();
+			for(File file : pageRankCacheFiles){
+				if(!file.getName().contains(".crc")
+						&& !file.getName().contains("crc")){
+					populatePageRanks(file);
+				}
+			}
+		}else{
+			populatePageRanks(pageRankCacheFile);
+		}
 		
-		File pageRankCacheFile = new File("./pageRankCacheFile");
+	}
+
+	private void populatePageRanks(File pageRankCacheFile) throws NumberFormatException, IOException {
 		BufferedReader bufferedReader = new BufferedReader(new FileReader(pageRankCacheFile));
 		String line;
 		while((line = bufferedReader.readLine()) != null){
 			String[] lineParts = line.split(":");
 			int index = Integer.parseInt(lineParts[0]);
-			double pageRank = Double.parseDouble(lineParts[1]);
+			double pageRank = Double.valueOf(lineParts[1]);
 			pageRanks[index] = pageRank;
 		}
 		bufferedReader.close();
+		
 	}
 
 	/* (non-Javadoc)
@@ -57,7 +73,7 @@ public class PageRankMapper extends Mapper<LongWritable, Text, LongWritable, Tex
 			Mapper<LongWritable, Text, LongWritable, Text>.Context context)
 			throws IOException, InterruptedException {
 		
-//		Value Format: pageNameNode~outlinkSize(or total number of pages if dangling)~outlinkNode1~outlinkNode2...
+//		Value Format: pageNameNode~outlinkSize~outlinkNode1~outlinkNode2...
 //		Ex: 0~3~1~3~4
 		String[] valueParts = value.toString().split("~");
 		Long rowVal = Long.parseLong(valueParts[0]);

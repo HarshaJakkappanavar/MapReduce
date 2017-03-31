@@ -11,7 +11,9 @@ public class AppConstants {
 	
 	
 //	Constant to hold intermediate directory path. 
-	public static final String PREPROCESSING_OUTPUT = "/colbyrow/preprocess";
+	public static final String PREPROCESSING_OUTPUT = "/preprocess";
+	
+	public static final String TRANSPOSE_OUTPUT = "/transpose";
 	
 //	ALPHA and (1 - ALPHA) value for new Page Rank calculation
 	public static final Double ALPHA_VALUE = 0.15;
@@ -31,12 +33,14 @@ public class AppConstants {
 //	Number of runs to refine the Page Rank
 	public static final int MAX_RUNS = 10;
 
-	public static final String INTERMEDIATE_OUTPUT = "/colbyrow/pagerank/iteration-";
+	public static final String INTERMEDIATE_OUTPUT = "/pagerank/iteration-";
 
-	public static final String TOP100 = "/colbyrow/top100";
+	public static final String TOP100 = "/top100";
 
 	public static final String DANGLING_NODE_CONTRIBUTION = "D";
 
 	public static final String PAGE_RANK_CONTRIBUTION = "PR";
+
+	public static final String DANGLING_OUTPUT = "/dangling/iteration-";
 
 }

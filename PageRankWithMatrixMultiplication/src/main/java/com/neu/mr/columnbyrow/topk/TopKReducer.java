@@ -41,7 +41,7 @@ public class TopKReducer extends Reducer<NullWritable, Text, NullWritable, Text>
 
 		for(Text pageRankEntry : value){
 			String[] parts = pageRankEntry.toString().split("=");
-			double pageRank = Double.parseDouble(parts[1]);
+			double pageRank = Double.valueOf(parts[1]);
 			
 			globalTop100Map.put(new DoubleWritable(pageRank), new Text(parts[0]));
 			

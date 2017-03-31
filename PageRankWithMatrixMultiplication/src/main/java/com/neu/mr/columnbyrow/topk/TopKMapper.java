@@ -41,6 +41,21 @@ public class TopKMapper extends Mapper<LongWritable, Text, NullWritable, Text> {
 		pagesMap = new String[TOTAL_NODES.intValue()];
 		
 		File pagesMapCacheFile = new File("./pagesMapCacheFile");
+		if(pagesMapCacheFile.isDirectory()){
+			File[] pageRankCacheFiles = pagesMapCacheFile.listFiles();
+			for(File file : pageRankCacheFiles){
+				if(!file.getName().contains(".crc")
+						&& !file.getName().contains("crc")){
+					populatePageMaps(file);
+				}
+			}
+		}else{
+			populatePageMaps(pagesMapCacheFile);
+		}
+		
+	}
+
+	private void populatePageMaps(File pagesMapCacheFile) throws NumberFormatException, IOException {
 		BufferedReader bufferedReader = new BufferedReader(new FileReader(pagesMapCacheFile));
 		String line;
 		while((line = bufferedReader.readLine()) != null){
@@ -65,7 +80,7 @@ public class TopKMapper extends Mapper<LongWritable, Text, NullWritable, Text> {
 
 //		Extract the Page rank from the input line.
 		String[] valueParts = value.toString().split(":");
-		double pageRank = Double.parseDouble(valueParts[1]);
+		double pageRank = Double.valueOf(valueParts[1]);
 		long mappedPage = Long.parseLong(valueParts[0]); 
 		
 		localTop100Map.put(new DoubleWritable(pageRank), new LongWritable(mappedPage));

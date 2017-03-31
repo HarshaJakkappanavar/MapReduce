@@ -5,9 +5,10 @@
 hadoop.root=/usr/local/hadoop
 jar.name=PageRankWithMatrixMultiplication-1.0.jar
 jar.path=target/${jar.name}
-job.name=com/neu/mr/columnbyrow/program/PageRankMatrixMultiplicationProgram
+job.versionA.name=com/neu/mr/columnbyrow/program/PageRankMatrixMultiplicationProgram
+job.versionB.name=com/neu/mr/rowbycolumn/program/PageRankMatrixMultiplicationProgram
 local.input=/home/harsha/NortheasternUniversity/Semester3/MapReduce/data/wiki/local
-local.output=output
+local.output=output/rowbycol
 # Pseudo-Cluster Execution
 hdfs.user.name=harsha
 hdfs.input=input
@@ -17,8 +18,8 @@ aws.emr.release=emr-5.2.1
 aws.region=us-east-1
 aws.bucket.name=harshaj-bucket
 aws.subnet.id=subnet-a5b9c7fe
-aws.input=input
-aws.output=output/machines11/top100
+aws.input=input/aws
+aws.output=output/machines6/colbyrow_version_a
 aws.log.dir=log
 aws.num.nodes=10
 aws.instance.type=m4.large
@@ -35,8 +36,15 @@ clean-local-output:
 # Runs standalone
 # Make sure Hadoop  is set up (in /etc/hadoop files) for standalone operation (not pseudo-cluster).
 # https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/SingleCluster.html#Standalone_Operation
-alone: jar clean-local-output
-	${hadoop.root}/bin/hadoop jar ${jar.path} ${job.name} ${local.input} ${local.output}
+alone-version-a: jar clean-local-output
+	${hadoop.root}/bin/hadoop jar ${jar.path} ${job.versionA.name} ${local.input} ${local.output}
+	
+# Runs standalone
+# Make sure Hadoop  is set up (in /etc/hadoop files) for standalone operation (not pseudo-cluster).
+# https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/SingleCluster.html#Standalone_Operation
+alone-version-b: jar clean-local-output
+	${hadoop.root}/bin/hadoop jar ${jar.path} ${job.versionB.name} ${local.input} ${local.output}
+	
 
 # Start HDFS
 start-hdfs:
@@ -108,13 +116,28 @@ upload-app-aws:
 	aws s3 cp ${jar.path} s3://${aws.bucket.name}
 
 # Main EMR launch.
-cloud: jar upload-app-aws delete-output-aws
+cloud-version-a: jar upload-app-aws delete-output-aws
 	aws emr create-cluster \
 		--name "PageRankInMapReduce Cluster" \
 		--release-label ${aws.emr.release} \
 		--instance-groups '[{"InstanceCount":${aws.num.nodes},"InstanceGroupType":"CORE","InstanceType":"${aws.instance.type}"},{"InstanceCount":1,"InstanceGroupType":"MASTER","InstanceType":"${aws.instance.type}"}]' \
 	    --applications Name=Hadoop \
-	    --steps '[{"Args":["${job.name}","s3://${aws.bucket.name}/${aws.input}","s3://${aws.bucket.name}/${aws.output}"],"Type":"CUSTOM_JAR","Jar":"s3://${aws.bucket.name}/${jar.name}","ActionOnFailure":"TERMINATE_CLUSTER","Name":"Custom JAR"}]' \
+	    --steps '[{"Args":["${job.versionA.name}","s3://${aws.bucket.name}/${aws.input}","s3://${aws.bucket.name}/${aws.output}"],"Type":"CUSTOM_JAR","Jar":"s3://${aws.bucket.name}/${jar.name}","ActionOnFailure":"TERMINATE_CLUSTER","Name":"Custom JAR"}]' \
+		--log-uri s3://${aws.bucket.name}/${aws.log.dir} \
+		--service-role EMR_DefaultRole \
+		--ec2-attributes InstanceProfile=EMR_EC2_DefaultRole,SubnetId=${aws.subnet.id} \
+		--region ${aws.region} \
+		--enable-debugging \
+		--auto-terminate
+
+# Main EMR launch.
+cloud-version-b: jar upload-app-aws delete-output-aws
+	aws emr create-cluster \
+		--name "PageRankInMapReduce Cluster" \
+		--release-label ${aws.emr.release} \
+		--instance-groups '[{"InstanceCount":${aws.num.nodes},"InstanceGroupType":"CORE","InstanceType":"${aws.instance.type}"},{"InstanceCount":1,"InstanceGroupType":"MASTER","InstanceType":"${aws.instance.type}"}]' \
+	    --applications Name=Hadoop \
+	    --steps '[{"Args":["${job.versionB.name}","s3://${aws.bucket.name}/${aws.input}","s3://${aws.bucket.name}/${aws.output}"],"Type":"CUSTOM_JAR","Jar":"s3://${aws.bucket.name}/${jar.name}","ActionOnFailure":"TERMINATE_CLUSTER","Name":"Custom JAR"}]' \
 		--log-uri s3://${aws.bucket.name}/${aws.log.dir} \
 		--service-role EMR_DefaultRole \
 		--ec2-attributes InstanceProfile=EMR_EC2_DefaultRole,SubnetId=${aws.subnet.id} \

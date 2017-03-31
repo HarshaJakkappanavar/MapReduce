@@ -23,6 +23,7 @@ public class DanglingNodeMapper extends Mapper<LongWritable, Text, LongWritable,
 	
 	private static Long TOTAL_NODES;
 	private static Double[] pageRanks;
+	private static Double danglingContribution = 0.0;
 	
 	/* (non-Javadoc)
 	 * @see org.apache.hadoop.mapreduce.Mapper#setup(org.apache.hadoop.mapreduce.Mapper.Context)
@@ -33,19 +34,37 @@ public class DanglingNodeMapper extends Mapper<LongWritable, Text, LongWritable,
 
 		Configuration configuration = context.getConfiguration();
 		
+		danglingContribution = 0.0;
 		TOTAL_NODES = configuration.getLong("TOTAL_NODES", 0L);
 		pageRanks = new Double[TOTAL_NODES.intValue()];
 		
-		File pageRankCacheFile = new File("./pageRankCacheFile");
+		String pageRankCacheFileName = configuration.get("PAGE_RANK_CACHE_FILE");
+		File pageRankCacheFile = new File("./"+pageRankCacheFileName);
+		if(pageRankCacheFile.isDirectory()){
+			File[] pageRankCacheFiles = pageRankCacheFile.listFiles();
+			for(File file : pageRankCacheFiles){
+				if(!file.getName().contains(".crc")
+						&& !file.getName().contains("crc")){
+					populatePageRanks(file);
+				}
+			}
+		}else{
+			populatePageRanks(pageRankCacheFile);
+		}
+		
+	}
+
+	private void populatePageRanks(File pageRankCacheFile) throws NumberFormatException, IOException {
 		BufferedReader bufferedReader = new BufferedReader(new FileReader(pageRankCacheFile));
 		String line;
 		while((line = bufferedReader.readLine()) != null){
 			String[] lineParts = line.split(":");
 			int index = Integer.parseInt(lineParts[0]);
-			double pageRank = Double.parseDouble(lineParts[1]);
+			double pageRank = Double.valueOf(lineParts[1]);
 			pageRanks[index] = pageRank;
 		}
 		bufferedReader.close();
+		
 	}
 
 	/* (non-Javadoc)
@@ -56,12 +75,20 @@ public class DanglingNodeMapper extends Mapper<LongWritable, Text, LongWritable,
 			Mapper<LongWritable, Text, LongWritable, Text>.Context context)
 			throws IOException, InterruptedException {
 		
-		Long rowVal = Long.parseLong(value.toString());
-		for(int colVal = 0; colVal < TOTAL_NODES; colVal++){
-			Double contribution = pageRanks[rowVal.intValue()]/TOTAL_NODES.doubleValue();
-			context.write(new LongWritable(colVal), new Text(AppConstants.DANGLING_NODE_CONTRIBUTION + ":" + contribution));
-		}
-		
+		Long indexVal = Long.parseLong(value.toString());
+		danglingContribution += pageRanks[indexVal.intValue()];
 	}
 
+	/* (non-Javadoc)
+	 * @see org.apache.hadoop.mapreduce.Mapper#cleanup(org.apache.hadoop.mapreduce.Mapper.Context)
+	 */
+	@Override
+	protected void cleanup(Mapper<LongWritable, Text, LongWritable, Text>.Context context)
+			throws IOException, InterruptedException {
+		for(int colVal = 0; colVal < TOTAL_NODES; colVal++){
+			context.write(new LongWritable(colVal), new Text(AppConstants.DANGLING_NODE_CONTRIBUTION + ":" + (danglingContribution/TOTAL_NODES.doubleValue())));
+		}
+	}
+
+	
 }

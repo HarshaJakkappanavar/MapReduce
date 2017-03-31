@@ -7,19 +7,23 @@ import java.net.URI;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
 import com.neu.mr.columnbyrow.pagerank.DanglingNodeMapper;
 import com.neu.mr.columnbyrow.pagerank.PageRankJob;
-import com.neu.mr.columnbyrow.preprocessor.PreprocessJob;
+import com.neu.mr.columnbyrow.pagerank.PageRankMapper;
 import com.neu.mr.columnbyrow.topk.TopKJob;
 import com.neu.mr.constants.AppConstants;
-import com.neu.mr.columnbyrow.pagerank.PageRankMapper;
+import com.neu.mr.preprocessor.PreprocessJob;
 
 /**
  * @author harsha
@@ -64,13 +68,19 @@ public class PageRankMatrixMultiplicationProgram {
 
 //		START of PAGES RANK JOB
 		for(int i = 1; i <= AppConstants.MAX_RUNS; i++){
+			configuration = new Configuration();
 			
-			Job pageRankJob = PageRankJob.configure(configuration);
+			String pageRankCacheFileName = "pageRankCacheFile" + i;
+			configuration.set("PAGE_RANK_CACHE_FILE", pageRankCacheFileName);
+			configuration.set("TOTAL_NODES", totalNodes.toString());
 
+			Job pageRankJob = PageRankJob.configure(configuration);
 			if(i == 1) {
-				pageRankJob.addCacheFile(new URI(outputPath + AppConstants.PREPROCESSING_OUTPUT + "/R-r-00000" + "#pageRankCacheFile"));
+				pageRankJob.addCacheFile(new URI(outputPath + AppConstants.PREPROCESSING_OUTPUT + "/R-r-00000#"+pageRankCacheFileName));
 			}else {
-				pageRankJob.addCacheFile(new URI(outputPath + AppConstants.INTERMEDIATE_OUTPUT + (i-1) + "#pageRankCacheFile"));
+				pageRankJob.addCacheFile(new URI(outputPath + AppConstants.INTERMEDIATE_OUTPUT + (i-1) + "#"+pageRankCacheFileName));
+//				pageRankJob.addCacheFile(new URI(outputPath + AppConstants.INTERMEDIATE_OUTPUT + (i-1) + "/part-r-00000#"+pageRankCacheFileName));
+//				pageRankJob.addCacheFile(new URI(outputPath + AppConstants.INTERMEDIATE_OUTPUT + (i-1) + "/R-r-00000#"+pageRankCacheFileName));
 			}
 			
 			MultipleInputs.addInputPath(pageRankJob, new Path(outputPath + AppConstants.PREPROCESSING_OUTPUT + "/M-r-00000"), TextInputFormat.class, PageRankMapper.class);
@@ -91,7 +101,7 @@ public class PageRankMatrixMultiplicationProgram {
 		FileInputFormat.addInputPath(topKJob, new Path(outputPath + AppConstants.INTERMEDIATE_OUTPUT + AppConstants.MAX_RUNS));
 		FileOutputFormat.setOutputPath(topKJob, new Path(outputPath + AppConstants.TOP100));
 		
-		topKJob.addCacheFile(new Path(outputPath + AppConstants.PREPROCESSING_OUTPUT + "/pageMap-r-00000#pagesMapCacheFile").toUri());
+		topKJob.addCacheFile(new URI(outputPath + AppConstants.PREPROCESSING_OUTPUT + "/pageMap-r-00000#pagesMapCacheFile"));
 		
 		boolean thirdJobStatus = topKJob.waitForCompletion(true);
 //		END of TOP-100 JOB
